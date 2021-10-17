@@ -36,7 +36,7 @@ def make_sl_entries(sl_entries, allow_negative_stock=False, via_landed_cost_vouc
 		if cancel:
 			validate_cancellation(sl_entries)
 			set_as_cancel(sl_entries[0].get('voucher_type'), sl_entries[0].get('voucher_no'))
-
+			
 		args = get_args_for_future_sle(sl_entries[0])
 		future_sle_exists(args, sl_entries)
 
@@ -56,7 +56,8 @@ def make_sl_entries(sl_entries, allow_negative_stock=False, via_landed_cost_vouc
 					sle['incoming_rate'] = get_incoming_outgoing_rate_for_cancel(sle.item_code,
 						sle.voucher_type, sle.voucher_no, sle.voucher_detail_no)
 					sle['outgoing_rate'] = 0.0
-
+				
+			
 			if sle.get("actual_qty") or sle.get("voucher_type")=="Stock Reconciliation":
 				sle_doc = make_entry(sle, allow_negative_stock, via_landed_cost_voucher)
 
@@ -67,6 +68,9 @@ def make_sl_entries(sl_entries, allow_negative_stock=False, via_landed_cost_vouc
 				args.previous_qty_after_transaction = sle.get("previous_qty_after_transaction")
 
 			update_bin(args, allow_negative_stock, via_landed_cost_voucher)
+
+		if cancel:
+			delete_cancelled_entry(sl_entries[0].get('voucher_type'), sl_entries[0].get('voucher_no'))
 
 def get_args_for_future_sle(row):
 	return frappe._dict({
@@ -1092,3 +1096,10 @@ def _round_off_if_near_zero(number: float, precision: int = 6) -> float:
 		return 0
 
 	return flt(number)
+
+
+
+# here edit
+def delete_cancelled_entry(voucher_type, voucher_no):
+	frappe.db.sql("""delete from `tabStock Ledger Entry`
+		where voucher_type=%s and voucher_no=%s""", (voucher_type, voucher_no))
