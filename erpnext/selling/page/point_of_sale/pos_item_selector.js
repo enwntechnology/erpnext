@@ -14,6 +14,9 @@ erpnext.PointOfSale.ItemSelector = class {
 
 	inti_component() {
 		this.prepare_dom();
+		// here edit
+		this.make_item_group();
+		// end edit
 		this.make_search_bar();
 		this.load_items_data();
 		this.bind_events();
@@ -23,6 +26,13 @@ erpnext.PointOfSale.ItemSelector = class {
 	prepare_dom() {
 		this.wrapper.append(
 			`<section class="items-selector">
+			<div class="Item-group-section">
+					<div class="label" style="margin:10px">All Item Groups</div>
+					<div class="items-groups" style="margin:20px">
+	
+					</div>
+				</div>
+
 				<div class="filter-section">
 					<div class="label">All Items</div>
 					<div class="search-field"></div>
@@ -174,6 +184,32 @@ erpnext.PointOfSale.ItemSelector = class {
 		this.search_field.toggle_label(false);
 		this.item_group_field.toggle_label(false);
 	}
+
+	//edit here
+	make_item_group(){
+		const me = this;
+		
+		this.get_item_groups_child({}).then(({message}) => {
+			message.forEach(item => {
+				$('.items-groups').append((`
+				<button type="button" id="item-group" style="margin-top:5px;" data-arg='${item.name}' class="btn btn-primary btn-xs">${item.name}</button>`));
+			});
+		});
+		this.$component.on('click', '#item-group', function() {
+			const $group = $(this);
+			const selected_group = unescape($group.attr('data-arg'));
+			me.item_group = selected_group;
+			me.item_group_field.set_value(selected_group);
+			me.filter_items();
+		});
+	}
+
+	get_item_groups_child(){
+		return frappe.call({
+			method: "erpnext.selling.page.point_of_sale.point_of_sale.get_item_groups_child",
+			});
+	}
+    //end edit
 
 	set_search_value(value) {
 		$(this.search_field.$input[0]).val(value).trigger("input");

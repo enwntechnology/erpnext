@@ -285,3 +285,9 @@ def set_customer_info(fieldname, customer, value=""):
 		contact_doc.set('phone_nos', [{ 'phone': value, 'is_primary_mobile_no': 1}])
 		frappe.db.set_value('Customer', customer, 'mobile_no', value)
 	contact_doc.save()
+
+@frappe.whitelist()
+def get_item_groups_child():
+	item_group = frappe.db.get_list("Item Group", filters={"is_group":0}, fields=["name"])
+	return item_group
+	
