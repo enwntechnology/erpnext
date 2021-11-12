@@ -452,7 +452,11 @@ class update_entries_after(object):
 			validate negative stock for entries current datetime onwards
 			will not consider cancelled entries
 		"""
-		diff = self.wh_data.qty_after_transaction + flt(sle.actual_qty)
+		#here edit
+		# diff = self.wh_data.qty_after_transaction + flt(sle.actual_qty)
+		pos_invoice_count = get_pos_reserved_qty(sle.item_code, sle.warehouse) 
+		diff = self.wh_data.qty_after_transaction + (flt(sle.actual_qty)-pos_invoice_count)
+		#end edit
 
 		if diff < 0 and abs(diff) > 0.0001:
 			# negative stock!
@@ -777,10 +781,14 @@ class update_entries_after(object):
 
 			if ((exceptions[0]["voucher_type"], exceptions[0]["voucher_no"]) in
 				frappe.local.flags.currently_saving):
-
-				msg = _("{0} units of {1} needed in {2} to complete this transaction.").format(
+				#here edit
+				# msg = _("{0} units of {1} needed in {2} to complete this transaction.").format(
+				# 	abs(deficiency), frappe.get_desk_link('Item', exceptions[0]["item_code"]),
+				# 	frappe.get_desk_link('Warehouse', warehouse))
+				msg = _("{0} units of {1} needed in {2} to complete this transaction \t POS Invoce units {3}.").format(
 					abs(deficiency), frappe.get_desk_link('Item', exceptions[0]["item_code"]),
-					frappe.get_desk_link('Warehouse', warehouse))
+					frappe.get_desk_link('Warehouse', warehouse), get_pos_reserved_qty(exceptions[0]["item_code"], warehouse))
+				#end edit
 			else:
 				msg = _("{0} units of {1} needed in {2} on {3} {4} for {5} to complete this transaction.").format(
 					abs(deficiency), frappe.get_desk_link('Item', exceptions[0]["item_code"]),
@@ -1103,3 +1111,18 @@ def _round_off_if_near_zero(number: float, precision: int = 6) -> float:
 def delete_cancelled_entry(voucher_type, voucher_no):
 	frappe.db.sql("""delete from `tabStock Ledger Entry`
 		where voucher_type=%s and voucher_no=%s""", (voucher_type, voucher_no))
+#end edit
+
+#edit here
+def get_pos_reserved_qty(item_code, warehouse):
+	reserved_qty = frappe.db.sql("""select sum(p_item.stock_qty) as qty
+		from `tabPOS Invoice` p, `tabPOS Invoice Item` p_item
+		where p.name = p_item.parent
+		and ifnull(p.consolidated_invoice, '') = ''
+		and p_item.docstatus = 1
+		and p_item.item_code = %s
+		and p_item.warehouse = %s
+		""", (item_code, warehouse), as_dict=1)
+
+	return reserved_qty[0].qty or 0 if reserved_qty else 0
+#end edit
