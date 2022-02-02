@@ -1,7 +1,6 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-from __future__ import unicode_literals
 
 import copy
 
@@ -68,7 +67,8 @@ def get_data(conditions, filters):
 			(soi.billed_amt * IFNULL(so.conversion_rate, 1)) as billed_amount,
 			(soi.base_amount - (soi.billed_amt * IFNULL(so.conversion_rate, 1))) as pending_amount,
 			soi.warehouse as warehouse,
-			so.company, soi.name
+			so.company, soi.name,
+			soi.description as description
 		FROM
 			`tabSales Order` so,
 			`tabSales Order Item` soi
@@ -178,6 +178,12 @@ def get_columns(filters):
 			"fieldname": "item_code",
 			"fieldtype": "Link",
 			"options": "Item",
+			"width": 100
+		})
+		columns.append({
+			"label":_("Description"),
+			"fieldname": "description",
+			"fieldtype": "Small Text",
 			"width": 100
 		})
 
