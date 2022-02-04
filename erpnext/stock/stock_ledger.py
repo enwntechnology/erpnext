@@ -95,10 +95,6 @@ def repost_current_voucher(args, allow_negative_stock=False, via_landed_cost_vou
 		# update qty in future sle and Validate negative qty
 		update_qty_in_future_sle(args, allow_negative_stock)
 
-
-		if cancel:
-			delete_cancelled_entry(sl_entries[0].get('voucher_type'), sl_entries[0].get('voucher_no'))
-
 def get_args_for_future_sle(row):
 	return frappe._dict({
 		'voucher_type': row.get('voucher_type'),
@@ -1186,13 +1182,6 @@ def _round_off_if_near_zero(number: float, precision: int = 6) -> float:
 
 	return flt(number)
 
-
-
-# here edit
-def delete_cancelled_entry(voucher_type, voucher_no):
-	frappe.db.sql("""delete from `tabStock Ledger Entry`
-		where voucher_type=%s and voucher_no=%s""", (voucher_type, voucher_no))
-#end edit
 
 #edit here
 def get_pos_reserved_qty(item_code, warehouse):
